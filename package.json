@@ -7,19 +7,28 @@
     "license": "MIT",
     "private": false,
     "devDependencies": {
-        "@types/node": "latest",
-        "tslint": "latest",
-        "typescript": "latest",
-        "prettier": "latest",
-        "nodemon": "latest",
-        "@babel/core": "latest",
         "@babel/cli": "latest",
-        "@babel/preset-typescript": "latest",
-        "@babel/preset-env": "latest",
+        "@babel/core": "latest",
         "@babel/plugin-proposal-class-properties": "7.5.5",
-        "@babel/plugin-proposal-object-rest-spread": "7.6.2"
+        "@babel/plugin-proposal-object-rest-spread": "7.6.2",
+        "@babel/preset-env": "latest",
+        "@babel/preset-typescript": "latest",
+        "@types/express": "^4.17.1",
+        "@types/node": "^12.11.7",
+        "nodemon": "latest",
+        "prettier": "latest",
+        "tslint": "latest",
+        "typescript": "latest"
     },
     "scripts": {
         "watch": "./watch.sh"
+    },
+    "dependencies": {
+        "axios": "^0.19.0",
+        "body-parser": "latest",
+        "cross-fetch": "latest",
+        "express": "latest",
+        "extract-zip": "^1.6.7",
+        "xml-js": "latest"
     }
 }
