@@ -9,5 +9,11 @@ export enum ManualCategories {
 export interface Manual {
     title: string;
     text: string[];
-    categorie: ManualCategories;
+    category: ManualCategories;
+}
+
+export function getAllCategories() {
+    return Object.keys(ManualCategories)
+        .filter((catKey) => ManualCategories[catKey] !== ManualCategories.ALL)
+        .map((catkey) => ManualCategories[catkey]);
 }

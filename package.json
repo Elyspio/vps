@@ -1,8 +1,8 @@
 {
-    "name": "ts-node-template",
+    "name": "vps",
     "version": "1.0.0",
-    "description": "NodeJS with typescript support template",
-    "repository": "https://github.com/Elyspio/ts-node-template",
+    "description": "Feature in nodejs for my vps",
+    "repository": "https://github.com/elyspio/vps",
     "author": "Jonathan Guichard",
     "license": "MIT",
     "private": false,
@@ -18,17 +18,22 @@
         "nodemon": "latest",
         "prettier": "latest",
         "tslint": "latest",
-        "typescript": "latest"
+        "typescript": "latest",
+        "concurrently": "latest",
+        "run-script-os": "latest",
+        "ts-node-dev": "latest"
     },
     "scripts": {
-        "watch": "./watch.sh"
+        "watch": "run-script-os",
+        "watch:linux": "./watch.sh",
+        "watch:win32": "ts-node-dev ./src/app.ts"
     },
     "dependencies": {
-        "axios": "^0.19.0",
+        "axios": "latest",
         "body-parser": "latest",
         "cross-fetch": "latest",
         "express": "latest",
-        "extract-zip": "^1.6.7",
+        "extract-zip": "latest",
         "xml-js": "latest"
     }
 }

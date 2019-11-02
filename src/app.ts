@@ -1,9 +1,10 @@
-import * as bodyParser from "body-parser";
-
-import express from "express";
+import {json, urlencoded} from "body-parser";
 import {router as fuelRouter} from "./controllers/fuel.controller";
 import {router as toolRouter} from "./controllers/tool.controller";
-import {Storage, StorageFiles} from "./model/storage/storage";
+import {ManualCategories} from "./model/manual/manual";
+import {ManualStorage} from "./model/storage/ManualStorage";
+
+const express = require("express");
 
 const app = express();
 
@@ -13,8 +14,8 @@ async function main() {
     app.use(fuelRouter);
     app.use(toolRouter);
 
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({extended: true}));
+    app.use(json());
+    app.use(urlencoded({extended: true}));
     // fuelInit().then(() => {
     //     app.use(fuelRouter);
     // });
@@ -25,6 +26,20 @@ async function main() {
 
     // app.listen(app.get('port'), () => {
     // });
+
+    const manualStorage = new ManualStorage();
+    manualStorage.put({
+        category: ManualCategories.SOFTWARE,
+        text: ["Je", "suis", "un", "text"],
+        title: "Je suis le titre!!",
+    });
+
+
+    console.log(manualStorage.get(ManualCategories.SOFTWARE));
+    console.log(manualStorage.get(ManualCategories.ALL));
+
+
+    // console.log(manualStorage.get());
 
     module.exports = app;
 

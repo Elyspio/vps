@@ -2,10 +2,9 @@ import {existsSync, readFileSync, writeFileSync} from "fs";
 import {homedir} from "os";
 import {join} from "path";
 import {APP_NAME} from "../../config/config";
-import {FileSystem} from "../common/fileSystem";
+import {mkdirRecursiveSync, touchSync} from "../common/fileSystem";
 import {UnknownJsonKey} from "./errors/UnknownJsonKey";
 
-const touchSync = FileSystem.touchSync;
 export type Jsonable = string | number | boolean | null | object;
 
 export enum StorageFiles {
@@ -17,6 +16,19 @@ export enum FileFormats {
     JSON,
 }
 
+export interface StorageOptions {
+    createIfNotExist: boolean;
+}
+
+const defaultStorageOptions: { get: StorageOptions, put: StorageOptions } = {
+    get: {
+        createIfNotExist: false,
+    },
+    put: {
+        createIfNotExist: true,
+    },
+};
+
 export class Storage {
 
     private static instance: Storage;
@@ -25,8 +37,7 @@ export class Storage {
 
     constructor() {
         this.appFolder = join(homedir(), ".local", APP_NAME);
-        FileSystem.mkdirRecursiveSync(this.appFolder);
-        // @ts-ignore
+        mkdirRecursiveSync(this.appFolder);
         Object.keys(StorageFiles).map((key) => StorageFiles[key]).forEach((filename) => {
             touchSync(join(this.appFolder, filename), FileFormats.JSON);
         });
@@ -39,13 +50,19 @@ export class Storage {
         return Storage.instance;
     }
 
-    protected get(file: StorageFiles, ...keys: string[]) {
+    protected get(file: StorageFiles, keys: string[], options: StorageOptions = defaultStorageOptions.get) {
 
         const filepath = join(this.appFolder, file);
+        if (this.moduleKey !== null && keys[0] !== this.moduleKey) {
+            keys = [this.moduleKey, ...keys];
+        }
 
         if (existsSync(filepath)) {
             let current = JSON.parse(readFileSync(filepath).toString());
             keys.forEach((key) => {
+                if (!(key in current) && options.createIfNotExist) {
+                    current[key] = {};
+                }
                 if (key in current) {
                     current = current[key];
                 } else {
@@ -57,10 +74,10 @@ export class Storage {
 
     }
 
-    protected delete(file: StorageFiles, ...keys: string[]) {
+    protected delete(file: StorageFiles, keys: string[]) {
 
         const filepath = join(this.appFolder, file);
-        const rootObject = this.get(file);
+        const rootObject = Storage.store.get(file, keys, defaultStorageOptions.get);
 
         let nObj = rootObject;
         if (keys.length > 0) {
@@ -78,14 +95,15 @@ export class Storage {
 
     }
 
-    protected put(file: StorageFiles, obj: Jsonable, ...keys: string[]) {
+    protected put(file: StorageFiles, obj: Jsonable, keys: string[]) {
 
         if (this.moduleKey != null) {
             keys = [this.moduleKey, ...keys];
         }
 
         const filepath = join(this.appFolder, file);
-        let rootObject = this.get(file);
+
+        let rootObject = Storage.store.get(file, []);
 
         let nObj = rootObject;
         if (keys.length > 0) {
