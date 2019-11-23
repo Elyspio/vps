@@ -3,7 +3,6 @@
 import {Request, Response, Router} from "express";
 import * as fs from "fs";
 import * as util from "util";
-import {downloadData} from "../model/fuel/fuel";
 
 const access = util.promisify(fs.access);
 const mkdir = util.promisify(fs.mkdir);
@@ -43,8 +42,8 @@ router.get(URLS.yearly.path, (req, res) => {
  *  @description the differents states / urls of application.
  *  @field url : the url that client ask.
  *  @field gouv : the url where data are fetched.
- *  @field filename : the name of the downloaded file.
- *  @field folder : the name of the folder where the files are downloaded
+ *  @field filename : the url of the downloaded file.
+ *  @field folder : the url of the folder where the files are downloaded
  *  @field ttl : the number of minutes that server wait before fetch again data.
  *
  */
@@ -75,25 +74,25 @@ const STATES = {
 
 };
 
-export async function init() {
-
-    fs.access(cache, fs.constants.F_OK, async (err) => {
-        if (err) {
-            await mkdir(cache);
-        }
-        [STATES.now, STATES.daily].forEach((async (state: any) => {
-            state.pathToZip = `${cache}/${state.folder}/${state.filename}.zip`;
-            state.pathToXml = `${cache}/${state.folder}/${state.filename}.xml`;
-            state.pathToJson = `${cache}/${state.folder}/${state.filename}.json`;
-
-            await downloadData(state);
-            setInterval(async () => {
-                await downloadData(state);
-            }, state.ttl * 1000 * 60);
-        }));
-    });
-
-}
+// export async function init() {
+//
+//     fs.access(cache, fs.constants.F_OK, async (err) => {
+//         if (err) {
+//             await mkdir(cache);
+//         }
+//         [STATES.now, STATES.daily].forEach((async (state: any) => {
+//             state.pathToZip = `${cache}/${state.folder}/${state.filename}.zip`;
+//             state.pathToXml = `${cache}/${state.folder}/${state.filename}.xml`;
+//             state.pathToJson = `${cache}/${state.folder}/${state.filename}.json`;
+//
+//             await downloadData(state);
+//             setInterval(async () => {
+//                 await downloadData(state);
+//             }, state.ttl * 1000 * 60);
+//         }));
+//     });
+//
+// }
 
 /**
  * @description read the xml files of fuel's price from disk and send it to client.

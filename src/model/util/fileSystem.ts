@@ -1,8 +1,8 @@
-import {existsSync, mkdirSync, promises, writeFileSync} from "fs";
+import {copyFileSync, existsSync, mkdirSync, promises, renameSync, unlinkSync, writeFileSync} from "fs";
 import {platform} from "os";
 import * as nodePath from "path";
 import {join, sep} from "path";
-import {FileFormats} from "../storage/storage";
+import {FileFormats} from "../storage/file/FileFormats";
 
 const mkdir = promises.mkdir;
 const lstat = promises.lstat;
@@ -19,7 +19,16 @@ export function mkdirRecursiveSync(path: string) {
             mkdirSync(str);
         }
     }
+}
+
+export function moveCrossDevice(oldPath: string, newPath: string) {
+    try {
+        renameSync(oldPath, newPath);
+    } catch (e) {
+        copyFileSync(oldPath, newPath);
+        unlinkSync(oldPath);
     }
+}
 
 export async function mkdirRecursive(path: string) {
     const splited = path.split(nodePath.sep);
@@ -29,11 +38,12 @@ export async function mkdirRecursive(path: string) {
         try {
             await lstat(str);
             await mkdir(str);
-        } catch (_) {
+        } catch (e) {
+            throw e;
         }
     }
 
-    }
+}
 
 export function touchSync(path: string, format: FileFormats) {
     const splited = path.split(nodePath.sep);
@@ -46,11 +56,10 @@ export function touchSync(path: string, format: FileFormats) {
                 break;
             default:
                 data = "";
-                    break;
-
-            }
-            writeFileSync(path, data);
+                break;
 
         }
-    }
+        writeFileSync(path, data);
 
+    }
+}

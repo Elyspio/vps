@@ -1,12 +1,12 @@
-import {getAllCategories, Manual, ManualCategories} from "../manual/manual";
-import {Storage, StorageFiles} from "./storage";
+import {getAllCategories, Manual, ManualCategories} from "../../../manual/manual";
+import {JsonStorage, StorageFiles} from "../JsonStorage";
 
 interface MManual {
     title: string;
     text: string[];
 }
 
-export class ManualStorage extends Storage {
+export class ManualStorage extends JsonStorage {
 
     protected moduleKey = "manual";
     private pathToPages = "pages";

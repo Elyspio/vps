@@ -1,8 +1,8 @@
 import {existsSync, readFileSync, writeFileSync} from "fs";
-import {homedir} from "os";
 import {join} from "path";
-import {APP_NAME} from "../../config/config";
-import {mkdirRecursiveSync, touchSync} from "../common/fileSystem";
+import {touchSync} from "../../util/fileSystem";
+import {FileFormats} from "../file/FileFormats";
+import {Store} from "../store";
 import {UnknownJsonKey} from "./errors/UnknownJsonKey";
 
 export type Jsonable = string | number | boolean | null | object;
@@ -10,10 +10,6 @@ export type Jsonable = string | number | boolean | null | object;
 export enum StorageFiles {
     setting = "settings.json",
     data = "data.json",
-}
-
-export enum FileFormats {
-    JSON,
 }
 
 export interface StorageOptions {
@@ -29,30 +25,44 @@ const defaultStorageOptions: { get: StorageOptions, put: StorageOptions } = {
     },
 };
 
-export class Storage {
+/**
+ *  Read and store json data for the application.
+ *  @singloton
+ */
+export class JsonStorage extends Store {
 
-    private static instance: Storage;
+    private static instance: JsonStorage;
+
+    protected currentModule = "json";
+
     protected moduleKey: string = null;
-    private readonly appFolder: string;
 
     constructor() {
-        this.appFolder = join(homedir(), ".local", APP_NAME);
-        mkdirRecursiveSync(this.appFolder);
+        super();
+
         Object.keys(StorageFiles).map((key) => StorageFiles[key]).forEach((filename) => {
-            touchSync(join(this.appFolder, filename), FileFormats.JSON);
+            touchSync(join(this.currentPath, filename), FileFormats.JSON);
         });
     }
 
-    static get store(): Storage {
-        if (Storage.instance === undefined) {
-            Storage.instance = new Storage();
+    static get store(): JsonStorage {
+        if (JsonStorage.instance === undefined) {
+            JsonStorage.instance = new JsonStorage();
         }
-        return Storage.instance;
+        return JsonStorage.instance;
     }
 
+    /**
+     * Get data from a json encoded file
+     * @return {object} data stored in json
+     * @param file
+     * @param keys
+     * @param options
+     */
+    // @ts-ignore
     protected get(file: StorageFiles, keys: string[], options: StorageOptions = defaultStorageOptions.get) {
 
-        const filepath = join(this.appFolder, file);
+        const filepath = join(this.currentPath, file);
         if (this.moduleKey !== null && keys[0] !== this.moduleKey) {
             keys = [this.moduleKey, ...keys];
         }
@@ -74,10 +84,15 @@ export class Storage {
 
     }
 
+    /**
+     * Delete an entry in a file
+     * @param file file to be deleted
+     * @param keys the entry to be deleted
+     */
     protected delete(file: StorageFiles, keys: string[]) {
 
-        const filepath = join(this.appFolder, file);
-        const rootObject = Storage.store.get(file, keys, defaultStorageOptions.get);
+        const filepath = join(this.currentPath, file);
+        const rootObject = JsonStorage.store.get(file, keys, defaultStorageOptions.get);
 
         let nObj = rootObject;
         if (keys.length > 0) {
@@ -95,15 +110,20 @@ export class Storage {
 
     }
 
+    /**
+     * Insert an entry in a file
+     * @param file file to be deleted
+     * @param obj {object} object to be added
+     * @param keys the entry to be deleted
+     */
+    // @ts-ignore
     protected put(file: StorageFiles, obj: Jsonable, keys: string[]) {
-
         if (this.moduleKey != null) {
             keys = [this.moduleKey, ...keys];
         }
+        const filepath = join(this.currentPath, file);
 
-        const filepath = join(this.appFolder, file);
-
-        let rootObject = Storage.store.get(file, []);
+        let rootObject = JsonStorage.store.get(file, []);
 
         let nObj = rootObject;
         if (keys.length > 0) {

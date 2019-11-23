@@ -1,46 +1,88 @@
 import fetch from "cross-fetch";
-import {Request, Response} from "express"; // to transform xml to json
-import {Router} from "express";
+import {Request, Response, Router} from "express"; // to transform xml to json
 import {xml2json} from "xml-js";
-
-const prefix = "/tool";
+import {Method, URI, WrongCallException} from "../errors/functional/WrongCallException";
 
 export const router = Router();
 
-export const URLS = {
-    getIp: {path: `${prefix}/ip`, help: "Return Ip of the server"},
-    xmlToJson: {path: `${prefix}/xmlToJson`, help: "Transform XML stream to JSON"},
+interface API {
+    ip: URI;
+    xmlToJson: URI;
+    downloadOnNas: URI;
+}
+
+export const api: API = {
+    ip: {
+        description: "Get the ip of the machine",
+        method: Method.GET,
+        url: "/ip",
+    },
+
+    xmlToJson: {
+        description: "Get the ip of the machine",
+        method: Method.GET,
+        parameters: [{
+            description: "the url of the xml feed",
+            name: "url",
+            type: String,
+        }],
+        url: "/xmlToJson",
+    },
+
+    downloadOnNas: {
+        description: "Get the ip of the machine",
+        method: Method.PUT,
+        parameters: [
+            {
+                description: "the url of the xml feed",
+                name: "type",
+                type: String,
+                possibleValues: ["magnet", "torrent_file_path"],
+            },
+            {
+                description: "the path of the torrent on vps",
+                name: "file_path",
+                type: String,
+            },
+            {
+                description: "the magnet of the torrent",
+                name: "magnet",
+                type: String,
+            },
+        ],
+        url: "/nas",
+    },
 };
 
-router.get(URLS.xmlToJson.path, (req: Request, res: Response) => {
+router.get(api.xmlToJson.url, (req: Request, res: Response) => {
     xmlToJson(req, res);
 });
 
-router.get(URLS.getIp.path, (req: Request, res: Response) => {
-    getIp(req, res);
+router.get(api.ip.url, (req: Request, res: Response) => {
+    getIp().then((ip) => {
+        res.json(ip);
+    });
 });
 
-/**
- *
- * @param req
- * @param res
- */
-export function xmlToJson(req: Request, res: Response) {
+router.put(api.downloadOnNas.url, (req, res) => {
+    console.log("Keys", Object.keys(req.query));
+    res.json({success: true});
+});
+
+function xmlToJson(req: Request, res: Response) {
     if (req.query.url === undefined) {
-        res.json({
-            method: "GET",
-            params: {
-                url: "Xml stream url",
-            },
-            title: "Incorrect usage",
-        });
+
+        res.json(new WrongCallException(api.xmlToJson));
     } else {
         res.json(xml2json(req.query.url));
     }
 
 }
 
-export async function getIp(req: Request, res: Response) {
-    const text: ResponseType = await fetch("https://api.ipify.org?format=json").then(((value) => value.json()));
-    res.json(text);
+async function getIp() {
+    return new Promise<string>((resolve) => {
+        fetch("https://api.ipify.org/?format=json")
+            .then((t) => t.json())
+            .then((json) => resolve(json.id));
+    });
 }
