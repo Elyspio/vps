@@ -1,7 +1,11 @@
-import {exec} from "child_process";
+import {exec as oldExec} from "child_process";
 import {createReadStream, PathLike, readFileSync, ReadStream, writeFileSync} from 'fs';
+import {platform} from "os";
 import {join} from "path";
+import {promisify} from "util";
 import {Store} from "../store";
+
+const exec = promisify(oldExec);
 
 enum OutputFormat {
     STREAM,
@@ -34,7 +38,20 @@ export class FileStorage extends Store {
 
         return new Promise<string>((resolve) => {
             const path = this.getPath(output);
-            exec(`wget ${url} -O ${path}`, () => {
+
+            let promise;
+
+            switch (platform()) {
+                case "linux":
+                    promise = exec(`wget ${url} -O ${path}`);
+                    break;
+
+                case "win32":
+                    promise = exec(`powershell -Command wget ${url} -OutFile ${path} -UseBasicParsing`);
+                    break;
+
+            }
+            promise.then(() => {
                 resolve(path);
             });
         });

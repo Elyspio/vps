@@ -1,5 +1,6 @@
 import {execSync} from "child_process";
 import {readdirSync, rmdirSync, unlinkSync} from "fs";
+import {platform} from "os";
 import {join} from "path";
 import {FileStorage} from "../storage/file/FileStorage";
 import {JsonStorage} from "../storage/json/JsonStorage";
@@ -20,7 +21,15 @@ export class Zip {
         }
         const tmpFolder = join(JsonStorage.appFolder, "tmp", Date.now().toString());
         mkdirRecursiveSync(tmpFolder);
-        execSync(`unzip  ${input} -d ${tmpFolder}`, {cwd: tmpFolder}).toString();
+
+        switch (platform()) {
+            case "linux":
+                execSync(`unzip  ${input} -d ${tmpFolder}`, {cwd: tmpFolder}).toString();
+                break;
+
+            case "win32":
+                execSync(`powershell -Command Expand-Archive ${input} -DestinationPath ${tmpFolder}`);
+        }
 
         if (deleteAfter) {
             unlinkSync(input);

@@ -20,7 +20,8 @@
         "nodemon": "latest",
         "prettier": "latest",
         "tslint": "latest",
-        "typescript": "latest"
+        "typescript": "latest",
+        "ts-node": "latest"
     },
     "scripts": {
         "watch:linux": "./watch.sh",
